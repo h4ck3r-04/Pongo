@@ -18,7 +18,7 @@ __END__
 
 =head1 NAME
 
-Pongo::Connect - Perl interface to connect to MongoDB using C++ driver.
+Pongo::Connect - Perl interface to connect to MongoDB using C driver.
 
 =head1 SYNOPSIS
 
@@ -32,6 +32,6 @@ Pongo::Connect - Perl interface to connect to MongoDB using C++ driver.
 
 =head1 DESCRIPTION
 
-Pongo::Connect wraps the MongoDB C++ driver and allows you to connect to a MongoDB instance from Perl.
+Pongo::Connect wraps the MongoDB C driver and allows you to connect to a MongoDB instance from Perl.
 
 =cut

@@ -11,7 +11,7 @@ __END__
 
 =head1 NAME
 
-Pongo - A Perl MongoDB interface using XS and the MongoDB C++ driver.
+Pongo - A Perl MongoDB interface using XS and the MongoDB C driver.
 
 =head1 SYNOPSIS
 
@@ -21,6 +21,6 @@ Pongo - A Perl MongoDB interface using XS and the MongoDB C++ driver.
 
 =head1 DESCRIPTION
 
-Pongo is a collection of MongoDB-related modules written in XS and Perl. It provides a MongoDB interface for Perl by using the MongoDB C++ driver.
+Pongo is a collection of MongoDB-related modules written in XS and Perl. It provides a MongoDB interface for Perl by using the MongoDB C driver.
 
 =cut
