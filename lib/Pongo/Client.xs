@@ -2059,14 +2059,21 @@ handshake_data_append(driver_name, driver_version, platform)
         RETVAL
 
 mongoc_cursor_t *
-colleciton_aggregate(collection, flags, pipeline, opts, read_prefs)
+collection_aggregate(collection, flags, pipeline, opts, read_prefs)
     mongoc_collection_t *collection;
-    mongoc_query_flags_t flags;
-    const bson_t *pipeline;
-    const bson_t *opts;
-    const mongoc_read_prefs_t *read_prefs;
+    int flags;
+    SV *pipeline;
+    SV *opts;
+    SV *read_prefs;
     CODE:
-        RETVAL = mongoc_collection_aggregate(collection, flags, pipeline, opts, read_prefs);
+        mongoc_query_flags_t flag_value = (mongoc_query_flags_t) flags;
+        const bson_t *bson_pipeline = (const bson_t *) SvIV(SvRV(pipeline));
+        const bson_t *bson_opts = (const bson_t *) SvIV(SvRV(opts));
+        const mongoc_read_prefs_t *read_prefs_value = NULL;
+        if (SvOK(read_prefs)) {
+            read_prefs_value = (const mongoc_read_prefs_t*) SvIV(SvRV(read_prefs));
+        }
+        RETVAL = mongoc_collection_aggregate(collection, flag_value, bson_pipeline, bson_opts, read_prefs_value);
     OUTPUT:
         RETVAL
 
@@ -2858,11 +2865,26 @@ cursor_new_from_command_reply_with_opts(client, reply, opts)
         RETVAL
 
 bool
-cursor_next(cursor, bson)
-    mongoc_cursor_t *cursor;
-    const bson_t **bson;
+cursor_next(cursor, bson_ref)
+    mongoc_cursor_t *cursor
+    AV *bson_ref
     CODE:
-        RETVAL = mongoc_cursor_next(cursor, bson);
+        if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV) {
+            croak("bson_ref is not an ARRAY reference");
+        }
+        const bson_t *bson = NULL;
+        RETVAL = mongoc_cursor_next(cursor, &bson);
+        if (RETVAL) {
+            if (bson) {
+                char *json_str = bson_as_json(bson, NULL);
+                if (json_str) {
+                    SV *json_sv = newSVpv(json_str, 0);
+                    bson_free(json_str);
+                    av_clear(bson_ref);
+                    av_push(bson_ref, json_sv);
+                }
+            }
+        }
     OUTPUT:
         RETVAL
 
