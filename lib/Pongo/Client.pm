@@ -1,9 +1,105 @@
 package Pongo::Client;
 use strict;
 use warnings;
+use Pongo::BSON;
 require XSLoader;
 
 XSLoader::load('Pongo::Client', $Pongo::VERSION);
+
+{
+  package PongoClient;
+  use base 'Class::Accessor';
+  __PACKAGE__->mk_accessors(qw(client collection uri));
+
+  sub new {
+    my ($class, $uri) = @_;
+    my $self = $class->SUPER::new();
+    my $client = Pongo::Client::client_new($uri);
+    $self->client($client);
+    $self->uri($uri);
+    return $self;
+  }
+
+  sub get_collection {
+    my ($self, $db_name, $collection_name) = @_;
+    my $collection = Pongo::Client::client_get_collection($self->client, $db_name, $collection_name);
+    return $collection;
+  }
+
+  sub insert_one {
+    my ($self, $db_name, $collection_name, $bson) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    Pongo::Client::collection_insert_one($collection, $bson->bson, undef, undef, undef);
+    Pongo::Client::collection_destroy($collection);
+  }
+
+  sub insert_many {
+    my ($self, $db_name, $collection_name, $bson_objects) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    foreach my $bson (@$bson_objects) {
+      Pongo::Client::collection_insert_one($collection, $bson->bson, undef, undef, undef);
+    }
+    Pongo::Client::collection_destroy($collection);
+  }
+
+  sub update_one {
+    my ($self, $db_name, $collection_name, $selector, $update) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    my $result = Pongo::Client::collection_update_one($collection, $selector->bson, $update->bson, undef, undef, undef);
+    Pongo::Client::collection_destroy($collection);
+    return $result;
+  }
+
+  sub update_many {
+    my ($self, $db_name, $collection_name, $updates) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    
+    foreach my $update (@$updates) {
+      my $selector = PongoBSON->new();
+      foreach my $key (keys %{$update->{selector}}) {
+        my $value = $update->{selector}{$key};
+        if ($value =~ /^\d+$/) {
+          $selector->append_int32($key, $value);
+        } else {
+          $selector->append_utf8($key, $value);
+        }
+      }
+
+      my $update_bson = PongoBSON->new();
+      foreach my $operation (keys %{$update->{update}}) {
+        my $operation_doc = PongoBSON->new();
+        foreach my $key (keys %{$update->{update}{$operation}}) {
+          my $value = $update->{update}{$operation}{$key};
+          if ($value =~ /^\d+$/) {
+            $operation_doc->append_int32($key, $value);
+          } else {
+            $operation_doc->append_utf8($key, $value);
+          }
+        }
+        $update_bson->append_document($operation, $operation_doc);  # Add the operation to update_bson
+      }
+
+      my $result = Pongo::Client::collection_update_one(
+        $collection, 
+        $selector->bson, 
+        $update_bson->bson, 
+        undef, undef, undef
+      );
+
+      unless ($result) {
+        warn "Failed to update document with selector: ".join(", ", map { "$_: $update->{selector}{$_}" } keys %{ $update->{selector} });
+      }
+    }
+    Pongo::Client::collection_destroy($collection);
+  }
+
+  sub DESTROY {
+    my $self = shift;
+    if ($self->client) {
+      Pongo::Client::client_destroy($self->client);
+    }
+  }
+}
 
 1;
 
