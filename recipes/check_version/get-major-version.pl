@@ -1,4 +1,4 @@
 use Pongo::CheckVersion;
 
-my $major_version = Pongo::CheckVersion::get_mongoc_major_version();
+my $major_version = Pongo::CheckVersion::GetMongoMajorVersion();
 print "MongoDB C Driver Major Version: $major_version\n";
