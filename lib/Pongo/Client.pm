@@ -31,6 +31,27 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
     Pongo::Client::collection_destroy($collection);
   }
 
+  sub get_cursor {
+    my ($self, $db_name, $collection_name, $query, $limit) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    my $cursor = Pongo::Client::collection_find($collection, 0, 0, $limit || 0, 0, $query, PongoBSON->new(), undef);
+    return $cursor;
+  }
+
+  sub destroy_cursor {
+    my ($self, $cursor, $collection) = @_;
+    Pongo::Client::cursor_destroy($cursor);
+    $self->destroy_collection($collection);
+  }
+
+  sub count {
+    my ($self, $db_name, $collection_name, $selector) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    my $count_ = Pongo::Client::collection_count($collection, 0, $selector, 0, 0, undef, undef);
+    $self->destroy_collection($collection);
+    return $count_;
+  }
+
   sub insert_one {
     my ($self, $db_name, $collection_name, $bson) = @_;
     my $collection = $self->get_collection($db_name, $collection_name);
@@ -118,7 +139,6 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
     my $query = PongoBSON->new();
     my $result = $self->delete_many($db_name, $collection_name, $query);
     return $result;
-
   }
 
   sub DESTROY {
