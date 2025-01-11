@@ -8,17 +8,9 @@ use warnings;
 use Pongo::Client;
 use Pongo::BSON;
 
-my $client = Pongo::Client::client_new("mongodb://localhost:27017");
-
-my $collection = Pongo::Client::client_get_collection($client, "testdb", "myCollection");
-
-my $query = Pongo::BSON::new();
-Pongo::BSON::append_utf8($query, "name", -1, "John Doe", -1);
-
-Pongo::Client::collection_delete_one($collection, $query, undef, undef, undef);
-
-Pongo::BSON::destroy($query);
-Pongo::Client::collection_destroy($collection);
-Pongo::Client::client_destroy($client);
+my $client = PongoClient->new("mongodb://localhost:27017");
+my $selector = PongoBSON->new();
+$selector->append_utf8("name", "Alice");
+my $result = $client->delete_one("testdb", "myCollection", $selector);
 
 1;

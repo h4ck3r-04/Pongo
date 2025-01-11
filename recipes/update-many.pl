@@ -3,40 +3,47 @@ use warnings;
 use Pongo::Client;
 use Pongo::BSON;
 
-my $client = Pongo::Client::client_new("mongodb://localhost:27017");
-
-my $collection = Pongo::Client::client_get_collection($client, "testdb", "myCollection");
-
-my @updates = (
-    { name => "Eric Doe", age => 46, email => "eric.updated\@gmail.com" },
-    { name => "Bob Johnson", age => 30, email => "bob.johnson\@example.com" },
-);
-
-foreach my $data (@updates) {
-    my $selector = Pongo::BSON::new();
-    Pongo::BSON::append_utf8($selector, "name", -1, $data->{name}, -1);
-
-    my $update = Pongo::BSON::new();
-    my $set = Pongo::BSON::new();
-    Pongo::BSON::append_int32($set, "age", -1, $data->{age});
-    Pongo::BSON::append_utf8($set, "email", -1, $data->{email}, -1);
-
-    Pongo::BSON::append_document($update, "\$set", -1, $set);
-
-    my $result = Pongo::Client::collection_update_one($collection, $selector, $update, undef, undef, undef);
-
-    if ($result) {
-        print "Document for $data->{name} updated successfully\n";
-    } else {
-        print "Failed to update document for $data->{name}\n";
+my $client = PongoClient->new("mongodb://localhost:27017");
+my $updates = [
+    {
+        selector => { name => "Alice" },
+        update   => { "\$set" => { age => 31 } }
+    },
+    {
+        selector => { name => "Bob" },
+        update   => { "\$set" => { age => 29 } }
     }
+];
 
-    Pongo::BSON::destroy($selector);
-    Pongo::BSON::destroy($update);
-    Pongo::BSON::destroy($set);
+foreach my $update (@$updates) {
+    my $selector = PongoBSON->new();
+    foreach my $key (keys %{ $update->{selector} }) {
+        my $value = $update->{selector}{$key};
+        if ($value =~ /^\d+$/) {
+            $selector->append_int32($key, $value);
+        } else {
+            $selector->append_utf8($key, $value);
+        }
+    }
+    my $update_bson = PongoBSON->new();
+    foreach my $operation (keys %{ $update->{update} }) {
+        my $operation_doc = PongoBSON->new();
+        foreach my $key (keys %{ $update->{update}{$operation} }) {
+            my $value = $update->{update}{$operation}{$key};
+            if ($value =~ /^\d+$/) {
+                $operation_doc->append_int32($key, $value);
+            } else {
+                $operation_doc->append_utf8($key, $value);
+            }
+        }
+        $update_bson->append_document($operation, $operation_doc);
+    }
+    my $result = $client->update_one("testdb", "myCollection", $selector, $update_bson);
+    if ($result) {
+        print "Update succeeded for selector: ", join(", ", map { "$_: $update->{selector}{$_}" } keys %{ $update->{selector} }), "\n";
+    } else {
+        warn "Update failed for selector: ", join(", ", map { "$_: $update->{selector}{$_}" } keys %{ $update->{selector} }), "\n";
+    }
 }
-
-Pongo::Client::collection_destroy($collection);
-Pongo::Client::client_destroy($client);
 
 1;

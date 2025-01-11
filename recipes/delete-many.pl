@@ -41,27 +41,10 @@ use warnings;
 use Pongo::Client;
 use Pongo::BSON;
 
-my $client = Pongo::Client::client_new("mongodb://localhost:27017");
+my $client = PongoClient->new("mongodb://localhost:27017");
+my $selector = PongoBSON->new();
+$selector->append_utf8("category", "Electronics");
 
-my $collection = Pongo::Client::client_get_collection($client, "testdb", "myCollection");
-
-my $query = Pongo::BSON::new();
-Pongo::BSON::append_utf8($query, "category", -1, "Electronics", -1);
-
-Pongo::Client::collection_delete_many($collection, $query, undef, undef, undef);
-
-my $product = Pongo::BSON::new();
-Pongo::BSON::append_utf8($product, "name", -1, "Sample Product", -1);
-Pongo::BSON::append_utf8($product, "category", -1, "Electronics", -1);
-Pongo::BSON::append_int32($product, "price", -1, 299);
-Pongo::BSON::append_utf8($product, "description", -1, "A high-quality electronic gadget", -1);
-
-Pongo::Client::collection_insert_one($collection, $product, undef, undef, undef);
-
-Pongo::BSON::destroy($query);
-Pongo::BSON::destroy($product);
-
-Pongo::Client::collection_destroy($collection);
-Pongo::Client::client_destroy($client);
+my $result = $client->delete_many("testdb", "myCollection", $selector);
 
 1;

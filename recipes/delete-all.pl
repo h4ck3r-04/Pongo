@@ -41,17 +41,13 @@ use warnings;
 use Pongo::Client;
 use Pongo::BSON;
 
-my $client = Pongo::Client::client_new("mongodb://localhost:27017");
+my $client = PongoClient->new("mongodb://localhost:27017");
+my $result = $client->delete_all("testdb", "myCollection");
 
-my $collection = Pongo::Client::client_get_collection($client, "testdb", "myCollection");
-
-my $query = Pongo::BSON::new();
-
-Pongo::Client::collection_delete_many($collection, $query, undef, undef, undef);
-
-Pongo::BSON::destroy($query);
-
-Pongo::Client::collection_destroy($collection);
-Pongo::Client::client_destroy($client);
+if ($result) {
+    print "All documents deleted successfully.\n";
+} else {
+    warn "Failed to delete documents.\n";
+}
 
 1;
