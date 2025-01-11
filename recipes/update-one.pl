@@ -15,10 +15,4 @@ $update->append_document("\$set", $set);
 
 my $result = $client->update_one("testdb", "myCollection", $selector, $update);
 
-if ($result) {
-    print "Document updated successfully!\n";
-} else {
-    print "Failed to update document\n";
-}
-
 1;

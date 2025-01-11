@@ -26,11 +26,16 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
     return $collection;
   }
 
+  sub destroy_collection {
+    my ($self, $collection) = @_;
+    Pongo::Client::collection_destroy($collection);
+  }
+
   sub insert_one {
     my ($self, $db_name, $collection_name, $bson) = @_;
     my $collection = $self->get_collection($db_name, $collection_name);
     Pongo::Client::collection_insert_one($collection, $bson->bson, undef, undef, undef);
-    Pongo::Client::collection_destroy($collection);
+    $self->destroy_collection($collection);
   }
 
   sub insert_many {
@@ -39,32 +44,36 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
     foreach my $bson (@$bson_objects) {
       Pongo::Client::collection_insert_one($collection, $bson->bson, undef, undef, undef);
     }
-    Pongo::Client::collection_destroy($collection);
+    $self->destroy_collection($collection);
   }
 
   sub update_one {
     my ($self, $db_name, $collection_name, $selector, $update) = @_;
     my $collection = $self->get_collection($db_name, $collection_name);
     my $result = Pongo::Client::collection_update_one($collection, $selector->bson, $update->bson, undef, undef, undef);
-    Pongo::Client::collection_destroy($collection);
+    $self->destroy_collection($collection);
     return $result;
   }
 
   sub update_many {
     my ($self, $db_name, $collection_name, $updates) = @_;
-    my $collection = $self->get_collection($db_name, $collection_name);
-    
+    unless (ref($updates) eq 'ARRAY') {
+      die "Updates must be an array reference";
+    }
+    my $results = [];
     foreach my $update (@$updates) {
+      unless (exists $update->{selector} && exists $update->{update}) {
+        die "Each update must contain a selector and an update operation";
+      }
       my $selector = PongoBSON->new();
       foreach my $key (keys %{$update->{selector}}) {
         my $value = $update->{selector}{$key};
-        if ($value =~ /^\d+$/) {
+        if ($value =~ /^d\+$/) {
           $selector->append_int32($key, $value);
         } else {
           $selector->append_utf8($key, $value);
         }
       }
-
       my $update_bson = PongoBSON->new();
       foreach my $operation (keys %{$update->{update}}) {
         my $operation_doc = PongoBSON->new();
@@ -76,21 +85,40 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
             $operation_doc->append_utf8($key, $value);
           }
         }
-        $update_bson->append_document($operation, $operation_doc);  # Add the operation to update_bson
+        $update_bson->append_document($operation, $operation_doc);
       }
-
-      my $result = Pongo::Client::collection_update_one(
-        $collection, 
-        $selector->bson, 
-        $update_bson->bson, 
-        undef, undef, undef
-      );
-
+      my $result = $self->update_one($db_name, $collection_name, $selector, $update_bson);
+      push @$results, $result;
       unless ($result) {
-        warn "Failed to update document with selector: ".join(", ", map { "$_: $update->{selector}{$_}" } keys %{ $update->{selector} });
+        warn "Failed to update document with selector: ".join(", ", map{ "$_: $update->{selector}{$_}" } keys %{ $update->{selector} });
       }
+      return $results;
     }
-    Pongo::Client::collection_destroy($collection);
+  }
+
+  sub delete_one {
+    my ($self, $db_name, $collection_name, $selector) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    my $result = Pongo::Client::collection_delete_one($collection, $selector->bson, undef, undef, undef);
+    $self->destroy_collection($collection);
+    return $result;
+  }
+
+  sub delete_many {
+    my ($self, $db_name, $collection_name, $selector) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    my $result = Pongo::Client::collection_delete_many($collection, $selector->bson, undef, undef, undef);
+    $self->destroy_collection($collection);
+    return $result;
+  }
+
+  sub delete_all {
+    my ($self, $db_name, $collection_name) = @_;
+    my $collection = $self->get_collection($db_name, $collection_name);
+    my $query = PongoBSON->new();
+    my $result = $self->delete_many($db_name, $collection_name, $query);
+    return $result;
+
   }
 
   sub DESTROY {
