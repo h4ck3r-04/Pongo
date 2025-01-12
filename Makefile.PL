@@ -5,21 +5,23 @@ use ExtUtils::MakeMaker 7.12;
 
 my $os = $^O;
 
+my $linux_mongoc_flags = `pkg-config --cflags --libs libmongoc-1.0 libbson-1.0`;
+chomp($linux_mongoc_flags);
+
 my %config = (
   NAME           => 'Pongo',
   VERSION_FROM   => 'lib/Pongo.pm',
   PREREQ_PM      => { 'ExtUtils::MakeMaker' => '7.12' },
   ABSTRACT_FROM  => 'lib/Pongo.pm',
   AUTHOR         => 'Rudraditya Thakur',
-  CCFLAGS        => '-Wall -std=c99 -I/usr/local/include/libmongoc-1.0 -I/usr/local/include/libbson-1.0',
-  OPTIMIZE       => '-O3',
+  CCFLAGS        => '-Wall -std=c99 -O3',
   LICENSE        => 'GPL-3.0 License',
   XSMULTI        => 1,
 );
 
 if ($os eq 'linux') {
-    $config{CCFLAGS} = 'pkg-config --cflags libmongoc-1.0 libbson-1.0';
-    $config{LIBS}    = [split ' ', 'pkg-config --libs libmongoc-1.0 libbson-1.0'];
+    $config{CCFLAGS} = " $linux_mongoc_flags";
+    $config{LIBS}    = [$linux_mongoc_flags];
 } elsif ($os eq 'darwin') {
     $config{CCFLAGS} = '-Wall -std=c99 -I/usr/local/include/libmongoc-1.0 -I/usr/local/include/libbson-1.0';
     $config{LIBS}    = ['-lmongoc-1.0 -lbson-1.0'];
