@@ -82,11 +82,24 @@ append_array(bson, key, key_length, array)
             if (elem && SvOK(*elem)) {
                 snprintf(index_key, sizeof(index_key), "%d", i);
                 if (SvIOK(*elem)) {
-                    bson_append_int64(&bson_array, index_key, -1, SvIV(*elem));
+                    if (SvIV(*elem) <= INT32_MAX && SvIV(*elem) >= INT32_MIN) {
+                        bson_append_int32(&bson_array, index_key, -1, SvIV(*elem));
+                    } else {
+                        bson_append_int64(&bson_array, index_key, -1, SvIV(*elem));
+                    }
                 } else if (SvNOK(*elem)) {
                     bson_append_double(&bson_array, index_key, -1, SvNV(*elem));
                 } else if (SvPOK(*elem)) {
                     bson_append_utf8(&bson_array, index_key, -1, SvPV_nolen(*elem), -1);
+                } else if (SvTRUE(*elem)) {
+                    bson_append_bool(&bson_array, index_key, -1, SvTRUE(*elem));
+                } else if (SvROK(*elem)) {
+                    SV *ref = SvRV(*elem);
+                    if (ref && SvOBJECT(ref)) {
+                        bson_append_document(&bson_array, index_key, -1, ref);
+                    } else {
+                        croak("Unsupported array element type (complex types like objects are not supported yet)");
+                    }
                 } else {
                     croak("Unsupported array element type");
                 }
