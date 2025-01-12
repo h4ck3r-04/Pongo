@@ -8,6 +8,9 @@ For Linux:
 -----------
 To install the necessary dependencies on a Linux system, use the following command:
 
+    sudo apt update
+    sudo apt install build-essential
+    sudo apt install pkg-config
     sudo apt-get install libmongoc-1.0-0 libbson-1.0-0 libmongoc-dev libbson-dev
 
 For macOS:

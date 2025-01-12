@@ -18,8 +18,8 @@ my %config = (
 );
 
 if ($os eq 'linux') {
-    $config{CCFLAGS} = '-Wall -std=c99 -I/usr/include/libmongoc-1.0 -I/usr/include/libbson-1.0';
-    $config{LIBS}    = ['-lmongoc-1.0 -lbson-1.0'];
+    $config{CCFLAGS} = 'pkg-config --cflags libmongoc-1.0 libbson-1.0';
+    $config{LIBS}    = [split ' ', 'pkg-config --libs libmongoc-1.0 libbson-1.0'];
 } elsif ($os eq 'darwin') {
     $config{CCFLAGS} = '-Wall -std=c99 -I/usr/local/include/libmongoc-1.0 -I/usr/local/include/libbson-1.0';
     $config{LIBS}    = ['-lmongoc-1.0 -lbson-1.0'];
