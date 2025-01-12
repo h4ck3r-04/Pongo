@@ -70,11 +70,30 @@ append_array(bson, key, key_length, array)
     bson_t *bson;
     SV *key;
     int key_length;
-    SV *array;
+    AV *array;
     CODE:
         const char *bson_key = SvPV_nolen(key);
-        const bson_t *bson_array = (const bson_t*) SvIV(SvRV(array));
-        RETVAL = bson_append_array(bson, bson_key, key_length, bson_array);
+        bson_t bson_array;
+        bson_init(&bson_array);
+        int array_len = av_len(array) + 1;
+        char index_key[16];
+        for (int i = 0; i < array_len; i++) {
+            SV **elem = av_fetch(array, i, 0);
+            if (elem && SvOK(*elem)) {
+                snprintf(index_key, sizeof(index_key), "%d", i);
+                if (SvIOK(*elem)) {
+                    bson_append_int64(&bson_array, index_key, -1, SvIV(*elem));
+                } else if (SvNOK(*elem)) {
+                    bson_append_double(&bson_array, index_key, -1, SvNV(*elem));
+                } else if (SvPOK(*elem)) {
+                    bson_append_utf8(&bson_array, index_key, -1, SvPV_nolen(*elem), -1);
+                } else {
+                    croak("Unsupported array element type");
+                }
+            }
+        }
+        RETVAL = bson_append_array(bson, bson_key, key_length, &bson_array);
+        bson_destroy(&bson_array);
     OUTPUT:
         RETVAL
 
