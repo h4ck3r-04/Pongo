@@ -55,6 +55,19 @@ XSLoader::load('Pongo::BSON', $Pongo::BSON);
         Pongo::BSON::append_array($self->bson, $key, -1, $array_ref);
     }
 
+    sub new_from_json {
+        my ($class, $json_string) = @_;
+        die "JSON string must be defined and non-empty" unless defined $json_string && $json_string ne '';
+        my $error_message = '';
+        my $bson = Pongo::BSON::new_from_json($json_string, length($json_string), $error_message);
+        if (!$bson) {
+            die "Error creating BSON from JSON: $error_message\n";
+        }
+        my $self = $class->SUPER::new();
+        $self->bson($bson);
+        return $self;
+    }
+
     sub DESTROY {
         my $self = shift;
         if ($self->bson) {

@@ -774,10 +774,22 @@ new_from_json(data, len, error)
     SV *len;
     SV *error;
     CODE:
-        uint8_t *data_ptr = (uint8_t*)SvPV_nolen(data);
-        ssize_t len_val = (ssize_t)SvIV(len);
-        bson_error_t *error_ptr = (bson_error_t*)SvIV(error);
-        RETVAL = bson_new_from_json(data_ptr, len_val, error_ptr);
+        uint8_t *data_ptr;
+        ssize_t len_val;
+        bson_error_t error_struct;
+        bson_t *bson_result;
+        if (!SvOK(data)) {
+            croak("data must be defined");
+        }
+        data_ptr = (uint8_t*)SvPV_nolen(data);
+        len_val = SvIV(len);
+        bson_result = bson_new_from_json(data_ptr, len_val, &error_struct);
+        if (!bson_result) {
+            sv_setpv(error, error_struct.message);
+            RETVAL = NULL;
+        } else {
+            RETVAL = bson_result;
+        }
     OUTPUT:
         RETVAL
 
