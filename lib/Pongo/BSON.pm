@@ -130,6 +130,13 @@ XSLoader::load('Pongo::BSON', $Pongo::BSON);
         return Pongo::BSON::append_null($self->bson, $key, $key_length);
     }
 
+    sub append_undefined {
+        my ($self, $key, $key_length) = @_;
+        $key_length = -1 unless defined $key_length;
+        die "key_length must be a valid integer" unless $key_length  =~ /^-?\d+$/;
+        return Pongo::BSON::append_undefined($self->bson, $key, $key_length);
+    }
+
     sub new_from_json {
         my ($class, $json_string) = @_;
         die "JSON string must be defined and non-empty" unless defined $json_string && $json_string ne '';
