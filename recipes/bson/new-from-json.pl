@@ -5,7 +5,7 @@ use Pongo::BSON;
 my $json_string = '{"name": "Alice", "age": 30}';
 my $bson_obj;
 eval {
-    $bson_obj = PongoBSON->new_from_json($json_string);
+    $bson_obj = BSON->new_from_json($json_string);
 };
 if ($@) {
     die "Failed to create BSON object: $@\n";

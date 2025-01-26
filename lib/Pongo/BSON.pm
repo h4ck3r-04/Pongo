@@ -6,7 +6,7 @@ require XSLoader;
 XSLoader::load('Pongo::BSON', $Pongo::BSON);
 
 {
-    package PongoBSON;
+    package BSON;
     use base 'Class::Accessor';
 
     __PACKAGE__->mk_accessors(qw(bson));
@@ -45,7 +45,7 @@ XSLoader::load('Pongo::BSON', $Pongo::BSON);
 
     sub append_document {
         my ($self, $key, $subdoc) = @_;
-        die "Invalid sub-document" unless $subdoc && $subdoc->isa('PongoBSON');
+        die "Invalid sub-document" unless $subdoc && $subdoc->isa('BSON');
         Pongo::BSON::append_document($self->bson, $key, -1, $subdoc->bson);
     }
 
