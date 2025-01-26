@@ -9,7 +9,7 @@ use Pongo::Client;
 use Pongo::BSON;
 
 my $client = PongoClient->new("mongodb://localhost:27017");
-my $selector = PongoBSON->new();
+my $selector = BSON->new();
 $selector->append_utf8("name", "Alice");
 my $result = $client->delete_one("testdb", "myCollection", $selector);
 

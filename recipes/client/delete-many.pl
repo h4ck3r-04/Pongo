@@ -42,7 +42,7 @@ use Pongo::Client;
 use Pongo::BSON;
 
 my $client = PongoClient->new("mongodb://localhost:27017");
-my $selector = PongoBSON->new();
+my $selector = BSON->new();
 $selector->append_utf8("category", "Electronics");
 
 my $result = $client->delete_many("testdb", "myCollection", $selector);

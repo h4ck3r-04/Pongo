@@ -31,7 +31,7 @@ my $json_string = q|{
 
 my $bson;
 eval {
-    $bson = PongoBSON->new_from_json($json_string);
+    $bson = BSON->new_from_json($json_string);
 };
 if ($@) {
     die "Failed to create BSON from JSON: $@\n";

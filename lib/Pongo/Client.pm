@@ -15,7 +15,7 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
     my ($class, $uri) = @_;
     my $self = $class->SUPER::new();
     my $client;
-    if (ref($uri) eq 'PongoBSON') {
+    if (ref($uri) eq 'BSON') {
       my $uri_str = $uri->to_str();
       $client = Pongo::Client::client_new_from_uri($uri_str);
     }
@@ -44,7 +44,7 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
   sub get_cursor {
     my ($self, $db_name, $collection_name, $query, $limit) = @_;
     my $collection = $self->get_collection($db_name, $collection_name);
-    my $cursor = Pongo::Client::collection_find($collection, 0, 0, $limit || 0, 0, $query, PongoBSON->new(), undef);
+    my $cursor = Pongo::Client::collection_find($collection, 0, 0, $limit || 0, 0, $query, BSON->new(), undef);
     return $cursor;
   }
 
@@ -96,7 +96,7 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
       unless (exists $update->{selector} && exists $update->{update}) {
         die "Each update must contain a selector and an update operation";
       }
-      my $selector = PongoBSON->new();
+      my $selector = BSON->new();
       foreach my $key (keys %{$update->{selector}}) {
         my $value = $update->{selector}{$key};
         if ($value =~ /^d\+$/) {
@@ -105,9 +105,9 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
           $selector->append_utf8($key, $value);
         }
       }
-      my $update_bson = PongoBSON->new();
+      my $update_bson = BSON->new();
       foreach my $operation (keys %{$update->{update}}) {
-        my $operation_doc = PongoBSON->new();
+        my $operation_doc = BSON->new();
         foreach my $key (keys %{$update->{update}{$operation}}) {
           my $value = $update->{update}{$operation}{$key};
           if ($value =~ /^\d+$/) {
@@ -146,7 +146,7 @@ XSLoader::load('Pongo::Client', $Pongo::VERSION);
   sub delete_all {
     my ($self, $db_name, $collection_name) = @_;
     my $collection = $self->get_collection($db_name, $collection_name);
-    my $query = PongoBSON->new();
+    my $query = BSON->new();
     my $result = $self->delete_many($db_name, $collection_name, $query);
     return $result;
   }

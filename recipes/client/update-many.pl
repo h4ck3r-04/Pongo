@@ -16,7 +16,7 @@ my $updates = [
 ];
 
 foreach my $update (@$updates) {
-    my $selector = PongoBSON->new();
+    my $selector = BSON->new();
     foreach my $key (keys %{ $update->{selector} }) {
         my $value = $update->{selector}{$key};
         if ($value =~ /^\d+$/) {
@@ -25,9 +25,9 @@ foreach my $update (@$updates) {
             $selector->append_utf8($key, $value);
         }
     }
-    my $update_bson = PongoBSON->new();
+    my $update_bson = BSON->new();
     foreach my $operation (keys %{ $update->{update} }) {
-        my $operation_doc = PongoBSON->new();
+        my $operation_doc = BSON->new();
         foreach my $key (keys %{ $update->{update}{$operation} }) {
             my $value = $update->{update}{$operation}{$key};
             if ($value =~ /^\d+$/) {
