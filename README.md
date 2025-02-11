@@ -2,7 +2,7 @@
 
 **MongoDB Driver for Perl**
 
-Pongo is a MongoDB driver for Perl, providing a simple interface for interacting with MongoDB databases. This package allows you to use MongoDB with Perl applications, supporting essential operations such as queries, insertions, and updates.
+Pongo is a high-performance MongoDB driver for Perl, built using C and XS to provide fast, low-latency interactions with MongoDB databases. It offers full support for MongoDB's core features, including CRUD operations, querying, and indexing, while maintaining the ease of use and flexibility that Perl developers expect. With native code optimization, Pongo ensures efficient database communication, making it an ideal choice for building scalable and high-performance applications in Perl.
 
 ## Supported Versions
 
